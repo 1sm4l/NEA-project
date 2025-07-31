@@ -408,7 +408,7 @@ def check_game_over():
         new_game.setgame_over()
         return True
     
-    elif new_game.getturn_counter() == 11: # if turn counter = max rounds + 1 (if no one dies)
+    elif new_game.getturn_counter() > 15: # if turn counter > max rounds (if no one dies)
 
         if current_player.gethealth() > opponent.gethealth(): # if player has more health than opponent
             new_game.setwinner(current_player.getname())
@@ -467,7 +467,7 @@ def draw_startup():
     instructions_button = button("INSTRUCTIONS", width // 2 - 105, int(3 * height / 4) + 10, 180, 80, manager).create_box()
     exit_button = button("EXIT", width // 2 + 105, int(3 * height / 4) + 10, 180, 80, manager).create_box()
     edit_deck = button("EDIT DECK", width // 2 + 320, int(3 * height / 4), 200, 100, manager).create_box()
-    player_select_button = button("P1", (width // 4) - 200, int(3 * height / 4), 100, 100, manager).create_box()
+    player_select_button = button(current_profile, (width // 4) - 200, int(3 * height / 4), 100, 100, manager).create_box()
     settings_button = button("SETTINGS", width - (width // 4) + 200, int(3 * height / 4), 100, 100, manager).create_box()
 
     # add to active elements
@@ -537,6 +537,9 @@ def draw_deck():
     suite_right = button(">", width // 2 + 423, int(height / 2) - 208, 50, 50, manager).create_box()
     suite_left = button("<  ", width // 2 + 227, int(height / 2) - 208, 50, 50, manager).create_box()
 
+    player_select_button = button(current_profile, width // 2 - 450, int(height / 2), 60, 40, manager).create_box()
+    deck_size_count = panel("0/20  ", width // 2 + 450, int(height / 2), 60, 40, manager).create_panel()
+
     select = button("Select", width // 2 + 325, int(height / 2) - 80, 250, 60, manager).create_box()
 
     # close button   
@@ -574,11 +577,13 @@ def draw_deck():
         current_suite_card, 
         suite_right, 
         suite_left, 
+        player_select_button,
+        deck_size_count,
         select, 
         close_button
     ])
 
-    return deck_left, deck_right, top_card, human, elf, dwarf, undead, description, current_suite_card, suite_right, suite_left, select, close_button
+    return deck_left, deck_right, top_card, human, elf, dwarf, undead, description, current_suite_card, suite_right, suite_left, player_select_button, deck_size_count, select, close_button
     
 
 def draw_instructions():
@@ -787,6 +792,37 @@ def draw_pause_menu():
 
 #---------------------------------------------------------------------------------------
 
+
+def declare_cards():
+    # Human cards
+    greedy_medic = card("Greedy Medic", "Human", 0, 20, 2, "Heals big but drains your tempo.", 1)
+    soldier = card("Soldier", "Human", 10, 0, 1, "Reliable and cheap.", 2)
+    combat_medic = card("Combat Medic", "Human", 10, 10, 2, "Supportive all-rounder.", 3)
+    sergeant = card("Sergeant", "Human", 20, 0, 2, "Clean strike.", 4)
+    alchemist = card("Alchemist", "Human", 30, -15, 3, "Risky gamble for burst.", 5)
+
+    # Elf cards
+    grand_elf = card("Grand Elf", "Elf", 5, 15, 2, "Graceful and precise.", 6)
+    natures_touch = card("Nature's Touch", "Elf", 0, 25, 2, "Great stall tool.", 7)
+    moonblade = card("Moonblade", "Elf", 10, 5, 1, "Nimble strike.", 8)
+    arcane_warden = card("Arcane Warden", "Elf", 15, 10, 2, "Versatile role.", 9)
+    lifeweaver = card("Lifeweaver", "Elf", 5, 30, 3, "Big sustain.", 10)
+
+    # Dwarf cards
+    urdunnir = card("Urdunnir", "Dwarf", 15, 0, 1, "Strong basic hit.", 11)
+    war_smith = card("War Smith", "Dwarf", 25, 0, 2, "Smashes through defences.", 12)
+    iron_veteran = card("Iron Veteran", "Dwarf", 20, 5, 2, "Battle-hardened support.", 13)
+    brewmaster = card("Brewmaster", "Dwarf", 10, 15, 3, "Heavy hitter and healer.", 14)
+    anvil_guard = card("Anvil Guard", "Dwarf", 30, 0, 4, "Titan strike.", 15)
+
+    # Undead cards
+    skeleton = card("Skeleton", "Undead", 10, 0, 1, "Cheap and effective.", 16)
+    blood_pact = card("Blood Pact", "Undead", 20, -10, 2, "Burn yourself to burn others.", 17)
+    wraith_blade = card("Wraith Blade", "Undead", 30, -20, 3, "Glass cannon peak.", 18)
+    ghoul = card("Ghoul", "Undead", 15, -5, 2, "Harms enemies and self slightly.", 19)
+    death_priest = card("Death Priest", "Undead", 5, 15, 2, "Dark support.", 20)
+
+
 def declare_variables():
     game_state = "startup"
     screen_drawn = False # condition check for drawing screen
@@ -810,6 +846,7 @@ def declare_variables():
     current_suite_card = None
     suite_right = None
     suite_left = None
+    deck_size_count = None
     select = None
     replay = None
     pause_button = None
@@ -817,7 +854,7 @@ def declare_variables():
     resume = None
     close_button = None
 
-    return game_state, screen_drawn, current_suite, play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button, deck_left, deck_right, top_card, human, elf, dwarf, undead, description, current_suite_card, suite_right, suite_left, select, replay, pause_button, background, resume, close_button
+    return game_state, screen_drawn, current_suite, play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button, deck_left, deck_right, top_card, human, elf, dwarf, undead, description, current_suite_card, suite_right, suite_left, deck_size_count, select, replay, pause_button, background, resume, close_button
 
 # setup
 fps = 60
@@ -840,11 +877,13 @@ selected_cards = []
 new_game = None
 active_ui_elements = []
 new_game = None
+current_profile = "P1"
+
 
 # main loop
 def main():
     run = True
-    game_state, screen_drawn, current_suite, play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button, deck_left, deck_right, top_card, human, elf, dwarf, undead, description, current_suite_card, suite_right, suite_left, select, replay, pause_button, background, resume, close_button = declare_variables()
+    game_state, screen_drawn, current_suite, play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button, deck_left, deck_right, top_card, human, elf, dwarf, undead, description, current_suite_card, suite_right, suite_left, deck_size_count, select, replay, pause_button, background, resume, close_button = declare_variables()
     global new_game # assigning new_game as a global variable for use in main game function
 
     while run:
@@ -867,12 +906,14 @@ def main():
                 # MAIN MENU BUTTON HANDLING
                 if event.ui_element == player_select_button:
                     print("Profile swapped")
-                    current_text = player_select_button.text
+                    global current_profile
 
-                    if current_text == "P1":
-                        player_select_button.set_text("P2")
+                    if current_profile == "P1":
+                        current_profile = "P2"
                     else:
-                        player_select_button.set_text("P1")
+                        current_profile = "P1"
+
+                    player_select_button.set_text(current_profile)
 
                 elif event.ui_element == play_button:
                     print("Game started")
@@ -985,7 +1026,7 @@ def main():
         
         elif game_state == "deck":
             if not screen_drawn:
-                deck_left, deck_right, top_card, human, elf, dwarf, undead, description, current_suite_card, suite_right, suite_left, select, close_button = draw_deck()
+                deck_left, deck_right, top_card, human, elf, dwarf, undead, description, current_suite_card, suite_right, suite_left, player_select_button, deck_size_count, select, close_button = draw_deck()
                 screen_drawn = True
 
             # based on current suite, the current suite card is changed
