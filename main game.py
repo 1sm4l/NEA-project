@@ -95,12 +95,17 @@ class player:
     def setdeck(self, gdeck):
         self.deck = gdeck
 
+    def addtodeck(self, gcard):
+        self.deck.append(gcard)
 
     def gethand(self):
         return self.hand
     
     def sethand(self, ghand):
         self.hand = ghand
+
+    def addtohand(self, gcard):
+        self.hand.append(gcard)    
 
     def getdiscard_pile(self):
         return self.discard_pile
@@ -372,6 +377,7 @@ def select_card(clicked_card): # clicked_card is selected from card in hand by c
         selected_cards.append(clicked_card)
     return selected_cards
 
+
 def take_turn():
     current_player, _ = check_current_player()
 
@@ -501,23 +507,23 @@ def draw_deck():
 
     # cards 
     # fourth row
-    card_temp1 = panel(" ", width // 2 - 350, int(height / 2) + 120, 125, 225, manager).create_panel()
-    card_temp2 = panel(" ", width // 2 + 350, int(height / 2) + 120, 125, 225, manager).create_panel()
+    card_temp1 = card_button(" ", width // 2 - 350, int(height / 2) + 120, 125, 225, manager, " ").create_box()
+    card_temp2 = card_button(" ", width // 2 + 350, int(height / 2) + 120, 125, 225, manager, " ").create_box()
 
     # third row
-    card_temp3 = panel(" ", width // 2 - 250, int(height / 2) + 120, 150, 250, manager).create_panel()
-    card_temp4 = panel(" ", width // 2 + 250, int(height / 2) + 120, 150, 250, manager).create_panel()
+    card_temp3 = card_button(" ", width // 2 - 250, int(height / 2) + 120, 150, 250, manager, " ").create_box()
+    card_temp4 = card_button(" ", width // 2 + 250, int(height / 2) + 120, 150, 250, manager, " ").create_box()
 
     # second row
-    card_temp5 = panel(" ", width // 2 - 150, int(height / 2) + 120, 175, 275, manager).create_panel()
-    card_temp6 = panel(" ", width // 2 + 150, int(height / 2) + 120, 175, 275, manager).create_panel()
+    card_temp5 = card_button(" ", width // 2 - 150, int(height / 2) + 120, 175, 275, manager, " ").create_box()
+    card_temp6 = card_button(" ", width // 2 + 150, int(height / 2) + 120, 175, 275, manager, " ").create_box()
 
     # top
-    top_card = panel(" ", width // 2, int(height / 2) + 120, 200, 300, manager).create_panel()
+    top_card = card_button(" ", width // 2, int(height / 2) + 120, 200, 300, manager, " ").create_box()
 
-    # suite
-    suite_temp1 = panel("Suites", width // 2 - 325, int(height / 2) - 350, 275, 60, manager).create_panel()
-    suite_temp2 = panel(" ", width // 2 - 325, int(height / 2) - 175, 275, 275, manager).create_panel()
+    # race
+    race_temp1 = panel("Races", width // 2 - 325, int(height / 2) - 350, 275, 60, manager).create_panel()
+    race_temp2 = panel(" ", width // 2 - 325, int(height / 2) - 175, 275, 275, manager).create_panel()
 
     human = button("human", width // 2 - 385, int(height / 2) - 235, 110, 110, manager).create_box()
     elf = button("elf", width // 2 - 265, int(height / 2) - 235, 110, 110, manager).create_box()
@@ -532,10 +538,11 @@ def draw_deck():
     card_select_temp1 = panel("Choose Card", width // 2 + 325, int(height / 2) - 350, 275, 60, manager).create_panel()
     card_select_temp2 = panel(" ", width // 2 + 325, int(height / 2) - 175, 275, 275, manager).create_panel()
 
-    current_suite_card = card_button(" ", width // 2 + 325, int(height / 2) - 208, 125, 175, manager, " ").create_box()
+    current_race_card = card_button(" ", width // 2 + 325, int(height / 2) - 208, 125, 175, manager, " ")
+    current_race_card_button = current_race_card.create_box()
 
-    suite_right = button(">", width // 2 + 423, int(height / 2) - 208, 50, 50, manager).create_box()
-    suite_left = button("<  ", width // 2 + 227, int(height / 2) - 208, 50, 50, manager).create_box()
+    race_right = button(">", width // 2 + 423, int(height / 2) - 208, 50, 50, manager).create_box()
+    race_left = button("<  ", width // 2 + 227, int(height / 2) - 208, 50, 50, manager).create_box()
 
     player_select_button = button(current_profile, width // 2 - 450, int(height / 2), 60, 40, manager).create_box()
     deck_size_count = panel("0/20  ", width // 2 + 450, int(height / 2), 60, 40, manager).create_panel()
@@ -557,8 +564,8 @@ def draw_deck():
         card_temp5,
         card_temp6,
 
-        suite_temp1,
-        suite_temp2,
+        race_temp1,
+        race_temp2,
 
         description_temp,
 
@@ -574,16 +581,16 @@ def draw_deck():
         dwarf, 
         undead, 
         description, 
-        current_suite_card, 
-        suite_right, 
-        suite_left, 
+        current_race_card_button, 
+        race_right, 
+        race_left, 
         player_select_button,
         deck_size_count,
         select, 
         close_button
     ])
 
-    return deck_left, deck_right, top_card, human, elf, dwarf, undead, description, current_suite_card, suite_right, suite_left, player_select_button, deck_size_count, select, close_button
+    return deck_left, deck_right, card_temp1, card_temp2, card_temp3, card_temp4, card_temp5, card_temp6, top_card, human, elf, dwarf, undead, description, current_race_card, current_race_card_button, race_right, race_left, player_select_button, deck_size_count, select, close_button
     
 
 def draw_instructions():
@@ -602,7 +609,7 @@ def draw_instructions():
     #      4. Aim of the game is to get your opponent's health down to 0.
            
     #      CARDS:
-    #      Each card are apart of a suite. Cards in a suite may contains synergies or tactical combos that can be used to have an edge over the opponent.
+    #      Each card are apart of a race. Cards in a race may contains synergies or tactical combos that can be used to have an edge over the opponent.
     #      Each card contains a cost to play, damage and heal (if it is a support card)
 
     # close button   
@@ -801,12 +808,16 @@ def declare_cards():
     sergeant = card("Sergeant", "Human", 20, 0, 2, "Clean strike.", 4)
     alchemist = card("Alchemist", "Human", 30, -15, 3, "Risky gamble for burst.", 5)
 
+    human_cards = [greedy_medic, soldier, combat_medic, sergeant, alchemist]
+
     # Elf cards
     grand_elf = card("Grand Elf", "Elf", 5, 15, 2, "Graceful and precise.", 6)
     natures_touch = card("Nature's Touch", "Elf", 0, 25, 2, "Great stall tool.", 7)
     moonblade = card("Moonblade", "Elf", 10, 5, 1, "Nimble strike.", 8)
     arcane_warden = card("Arcane Warden", "Elf", 15, 10, 2, "Versatile role.", 9)
     lifeweaver = card("Lifeweaver", "Elf", 5, 30, 3, "Big sustain.", 10)
+
+    elf_cards = [grand_elf, natures_touch, moonblade, arcane_warden, lifeweaver]
 
     # Dwarf cards
     urdunnir = card("Urdunnir", "Dwarf", 15, 0, 1, "Strong basic hit.", 11)
@@ -815,6 +826,8 @@ def declare_cards():
     brewmaster = card("Brewmaster", "Dwarf", 10, 15, 3, "Heavy hitter and healer.", 14)
     anvil_guard = card("Anvil Guard", "Dwarf", 30, 0, 4, "Titan strike.", 15)
 
+    dwarf_cards = [urdunnir, war_smith, iron_veteran, brewmaster, anvil_guard]
+
     # Undead cards
     skeleton = card("Skeleton", "Undead", 10, 0, 1, "Cheap and effective.", 16)
     blood_pact = card("Blood Pact", "Undead", 20, -10, 2, "Burn yourself to burn others.", 17)
@@ -822,11 +835,17 @@ def declare_cards():
     ghoul = card("Ghoul", "Undead", 15, -5, 2, "Harms enemies and self slightly.", 19)
     death_priest = card("Death Priest", "Undead", 5, 15, 2, "Dark support.", 20)
 
+    undead_cards = [skeleton, blood_pact, wraith_blade, ghoul, death_priest]
+
+    race_card_length = 5
+
+    return human_cards, elf_cards, dwarf_cards, undead_cards, race_card_length
+
 
 def declare_variables():
     game_state = "startup"
     screen_drawn = False # condition check for drawing screen
-    current_suite = None
+    current_race = None
 
     # buttons
     play_button = None
@@ -843,9 +862,9 @@ def declare_variables():
     dwarf = None
     undead = None
     description = None
-    current_suite_card = None
-    suite_right = None
-    suite_left = None
+    current_race_card_button = None
+    race_right = None
+    race_left = None
     deck_size_count = None
     select = None
     replay = None
@@ -854,7 +873,15 @@ def declare_variables():
     resume = None
     close_button = None
 
-    return game_state, screen_drawn, current_suite, play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button, deck_left, deck_right, top_card, human, elf, dwarf, undead, description, current_suite_card, suite_right, suite_left, deck_size_count, select, replay, pause_button, background, resume, close_button
+    return game_state, screen_drawn, current_race, play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button, deck_left, deck_right, top_card, human, elf, dwarf, undead, description, current_race_card_button, race_right, race_left, deck_size_count, select, replay, pause_button, background, resume, close_button
+
+
+def update_current_race_card(current_race, current_race_card, current_race_card_button, index):
+    current_race_card.setcard(current_race[index])
+    current_race_card_button.set_text(current_race[index].getname())
+    
+    return current_race_card, current_race_card_button
+
 
 # setup
 fps = 60
@@ -879,12 +906,15 @@ active_ui_elements = []
 new_game = None
 current_profile = "P1"
 
-
 # main loop
 def main():
     run = True
-    game_state, screen_drawn, current_suite, play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button, deck_left, deck_right, top_card, human, elf, dwarf, undead, description, current_suite_card, suite_right, suite_left, deck_size_count, select, replay, pause_button, background, resume, close_button = declare_variables()
+
+    human_cards, elf_cards, dwarf_cards, undead_cards, race_card_length = declare_cards()
+    game_state, screen_drawn, current_race, play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button, deck_left, deck_right, top_card, human, elf, dwarf, undead, description, current_race_card_button, race_right, race_left, deck_size_count, select, replay, pause_button, background, resume, close_button = declare_variables()
+    
     global new_game # assigning new_game as a global variable for use in main game function
+    index = 0
 
     while run:
         time_delta = clock.tick(fps) / 1000.0
@@ -944,8 +974,9 @@ def main():
                     run = False
 
                 elif event.ui_element == edit_deck:
-                    print("Enter deck builder")
-                    
+                    print("Entered deck builder")
+                    current_race = None
+
                     # disables background UI
                     for element in active_ui_elements:
                         element.disable()
@@ -956,21 +987,44 @@ def main():
 
                 # DECK BUILDER BUTTON HANDLING
                 elif event.ui_element == human:
-                    current_suite = "human"
+                    current_race = human_cards
+                    index = 0
+                    current_race_card, current_race_card_button = update_current_race_card(current_race, current_race_card, current_race_card_button, index)
 
                 elif event.ui_element == elf:
-                    current_suite = "elf"
+                    current_race = elf_cards
+                    index = 0
+                    current_race_card, current_race_card_button = update_current_race_card(current_race, current_race_card, current_race_card_button, index)
 
                 elif event.ui_element == dwarf:
-                    current_suite = "dwarf"
+                    current_race = human_cards
+                    index = 0
+                    current_race_card, current_race_card_button = update_current_race_card(current_race, current_race_card, current_race_card_button, index)
 
                 elif event.ui_element == undead:
-                    current_suite = "undead"
+                    current_race = undead_cards
+                    index = 0
+                    current_race_card, current_race_card_button = update_current_race_card(current_race, current_race_card, current_race_card_button, index)
 
-                elif event.ui_element == deck_left:
-                    pass
+                elif event.ui_element == race_left:
+                    if index == 0:
+                        index = race_card_length - 1 # goes from 0 to length - 1 
+                    else:
+                        index -= 1
 
-                elif event.ui_element == deck_right:
+                    if current_race:
+                        current_race_card, current_race_card_button = update_current_race_card(current_race, current_race_card, current_race_card_button, index)
+
+                elif event.ui_element == race_right:
+                    if index == race_card_length - 1: # goes from 0 to length - 1 
+                        index = 0
+                    else:
+                        index += 1
+
+                    if current_race:
+                        current_race_card, current_race_card_button = update_current_race_card(current_race, current_race_card, current_race_card_button, index)
+
+                elif event.ui_element == select:
                     pass
 
 
@@ -984,8 +1038,8 @@ def main():
                     print("Settings Opened")
                     game_state = "pause_menu"
                     screen_drawn = False
-                
-                #TODO FIX THIS----------------------------------------------------------------------------------------------
+
+
                 elif event.ui_element == resume:
                     
                     background.kill()
@@ -1026,10 +1080,22 @@ def main():
         
         elif game_state == "deck":
             if not screen_drawn:
-                deck_left, deck_right, top_card, human, elf, dwarf, undead, description, current_suite_card, suite_right, suite_left, player_select_button, deck_size_count, select, close_button = draw_deck()
+                deck_left, deck_right, card_temp1, card_temp2, card_temp3, card_temp4, card_temp5, card_temp6, top_card, human, elf, dwarf, undead, description, current_race_card, current_race_card_button, race_right, race_left, player_select_button, deck_size_count, select, close_button = draw_deck()
                 screen_drawn = True
 
-            # based on current suite, the current suite card is changed
+            deck_card_boxes = [card_temp1, card_temp2, card_temp3, card_temp4, card_temp5, card_temp6, top_card]
+
+            if current_profile == "P1":
+                current_deck = player_1.getdeck()
+            else:
+                current_deck = player_2.getdeck()
+
+            for i, box in enumerate(deck_card_boxes):
+                if i < len(current_deck):
+                    box.set_text(current_deck[i].name)
+                else:
+                    box.set_text(" ")  # empty slot
+
 
         elif game_state == "instructions":
             if not screen_drawn:
