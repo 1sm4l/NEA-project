@@ -53,6 +53,9 @@ class card:
     def getid(self):
         return self.id
     
+    def clone(self):
+        return card(self.name, self.type, self.dmg, self.heal, self.cost, self.description, self.id)
+    
 
 # class player
 class player:
@@ -126,6 +129,12 @@ class player:
     
     def setis_turn(self, gis_turn):
         self.is_turn = gis_turn
+
+    def replenish_deck(self):
+        self.deck.extend(self.hand)
+        self.deck.extend(self.discard_pile)
+        self.hand.clear()
+        self.discard_pile.clear()
 
 
     # methods
@@ -221,7 +230,6 @@ class game:
 
 # panel blueprint
 class panel:
-    # constructor 
     def __init__(self, nname, nx, ny, nwidth, nheight, nmanager):
         self.name = nname
         self.x = nx
@@ -229,28 +237,35 @@ class panel:
         self.width = nwidth
         self.height = nheight
         self.manager = nmanager
+        self.box = None
+        self.label = None
+
+    def setname(self, gname):
+        self.name = str(gname)
+        if self.label:
+            self.label.set_text(self.name)
 
     def create_panel(self):
-
         centered_x = self.x - (self.width / 2)
         centered_y = self.y - (self.height / 2)
 
-        box = pygame_gui.elements.UIPanel(
-            relative_rect = pygame.Rect((centered_x, centered_y), (self.width, self.height)),
-            manager = self.manager
+        self.box = pygame_gui.elements.UIPanel(
+            relative_rect=pygame.Rect((centered_x, centered_y), (self.width, self.height)),
+            manager=self.manager
         )
 
         label_width, label_height = 200, 30
         label_x = (self.width - label_width) // 2
         label_y = (self.height - label_height) // 2
 
-        label = pygame_gui.elements.UILabel(
-            relative_rect = pygame.Rect((label_x, label_y), (label_width, label_height)),  # position relative to the box
-            text = self.name,
-            manager = self.manager,
-            container = box  # attaches it to the box
+        self.label = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect((label_x, label_y), (label_width, label_height)),
+            text=self.name,
+            manager=self.manager,
+            container=self.box
         )
-        return box 
+
+        return self.box
 
 
 # blueprint for every button
@@ -267,6 +282,9 @@ class button:
 
     def setname(self, gname):
         self.name = str(gname)
+
+    def getname(self):
+        return self.name
 
     def create_box(self):
 
@@ -507,19 +525,20 @@ def draw_deck():
 
     # cards 
     # fourth row
-    card_temp1 = card_button(" ", width // 2 - 350, int(height / 2) + 120, 125, 225, manager, " ").create_box()
-    card_temp2 = card_button(" ", width // 2 + 350, int(height / 2) + 120, 125, 225, manager, " ").create_box()
+    card_temp1 = button(" ", width // 2 - 350, int(height / 2) + 120, 125, 225, manager).create_box()
+    card_temp2 = button(" ", width // 2 + 350, int(height / 2) + 120, 125, 225, manager).create_box()
 
     # third row
-    card_temp3 = card_button(" ", width // 2 - 250, int(height / 2) + 120, 150, 250, manager, " ").create_box()
-    card_temp4 = card_button(" ", width // 2 + 250, int(height / 2) + 120, 150, 250, manager, " ").create_box()
+    card_temp3 = button(" ", width // 2 - 250, int(height / 2) + 120, 150, 250, manager).create_box()
+    card_temp4 = button(" ", width // 2 + 250, int(height / 2) + 120, 150, 250, manager).create_box()
 
     # second row
-    card_temp5 = card_button(" ", width // 2 - 150, int(height / 2) + 120, 175, 275, manager, " ").create_box()
-    card_temp6 = card_button(" ", width // 2 + 150, int(height / 2) + 120, 175, 275, manager, " ").create_box()
+    card_temp5 = button(" ", width // 2 - 150, int(height / 2) + 120, 175, 275, manager).create_box()
+    card_temp6 = button(" ", width // 2 + 150, int(height / 2) + 120, 175, 275, manager).create_box()
 
     # top
-    top_card = card_button(" ", width // 2, int(height / 2) + 120, 200, 300, manager, " ").create_box()
+    top_card = card_button(" ", width // 2, int(height / 2) + 120, 200, 300, manager, "")
+    top_card_ui = top_card.create_box()
 
     # race
     race_temp1 = panel("Races", width // 2 - 325, int(height / 2) - 350, 275, 60, manager).create_panel()
@@ -545,7 +564,9 @@ def draw_deck():
     race_left = button("<  ", width // 2 + 227, int(height / 2) - 208, 50, 50, manager).create_box()
 
     player_select_button = button(current_profile, width // 2 - 450, int(height / 2), 60, 40, manager).create_box()
-    deck_size_count = panel("0/20  ", width // 2 + 450, int(height / 2), 60, 40, manager).create_panel()
+
+    deck_size_panel = panel(" ", width // 2 + 450, int(height / 2), 60, 40, manager)
+    deck_size_count = deck_size_panel.create_panel()
 
     select = button("Select", width // 2 + 325, int(height / 2) - 80, 250, 60, manager).create_box()
 
@@ -573,9 +594,10 @@ def draw_deck():
         card_select_temp2,
 
         # buttons
+        deck_size_count,
         deck_left,
         deck_right, 
-        top_card,
+        top_card_ui,
         human, 
         elf, 
         dwarf, 
@@ -585,12 +607,11 @@ def draw_deck():
         race_right, 
         race_left, 
         player_select_button,
-        deck_size_count,
         select, 
         close_button
     ])
 
-    return deck_left, deck_right, card_temp1, card_temp2, card_temp3, card_temp4, card_temp5, card_temp6, top_card, human, elf, dwarf, undead, description, current_race_card, current_race_card_button, race_right, race_left, player_select_button, deck_size_count, select, close_button
+    return  deck_size_panel, deck_left, deck_right, card_temp1, card_temp2, card_temp3, card_temp4, card_temp5, card_temp6, top_card, top_card_ui, human, elf, dwarf, undead, description, current_race_card, current_race_card_button, race_right, race_left, player_select_button, select, close_button
     
 
 def draw_instructions():
@@ -856,7 +877,6 @@ def declare_variables():
     settings_button = None
     deck_left = None
     deck_right = None
-    top_card = None
     human = None
     elf = None
     dwarf = None
@@ -865,22 +885,77 @@ def declare_variables():
     current_race_card_button = None
     race_right = None
     race_left = None
-    deck_size_count = None
     select = None
     replay = None
     pause_button = None
     background = None
     resume = None
     close_button = None
+    card_slot1 = None
+    card_slot2 = None
+    card_slot3 = None
+    top_card_ui = None
+    card_slot4 = None
+    card_slot5 = None
+    card_slot6 = None
 
-    return game_state, screen_drawn, current_race, play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button, deck_left, deck_right, top_card, human, elf, dwarf, undead, description, current_race_card_button, race_right, race_left, deck_size_count, select, replay, pause_button, background, resume, close_button
+    return game_state, screen_drawn, current_race, play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button, deck_left, deck_right, top_card_ui, human, elf, dwarf, undead, description, current_race_card_button, race_right, race_left, select, replay, pause_button, background, resume, close_button, card_slot1, card_slot2, card_slot3, card_slot4, card_slot5, card_slot6
 
 
 def update_current_race_card(current_race, current_race_card, current_race_card_button, index):
     current_race_card.setcard(current_race[index])
+    current_race_card.setname(current_race[index].getname())
     current_race_card_button.set_text(current_race[index].getname())
     
     return current_race_card, current_race_card_button
+
+
+def update_deck_size(current_deck):
+    deck_size = 0
+
+    for i in range(len(current_deck)):
+        if current_deck[i] != None:
+            deck_size += 1
+
+    return deck_size
+
+
+def update_current_deck():
+    if current_profile == "P1":
+        current_deck = player_1.getdeck()
+    else:
+        current_deck = player_2.getdeck()
+
+    while len(current_deck) != 20:
+        current_deck.append(None)
+
+    return current_deck
+
+
+def update_deck_ui(current_deck, front_pointer, back_pointer, deck_card_boxes):
+    deck_len = len(current_deck)
+
+    indices = [
+        (back_pointer - 2) % deck_len,
+        (back_pointer - 1) % deck_len,
+        back_pointer % deck_len,
+        front_pointer % deck_len,
+        (front_pointer + 1) % deck_len,
+        (front_pointer + 2) % deck_len,
+        (front_pointer + 3) % deck_len,
+    ]
+
+    for i, idx in enumerate(indices):
+        card = current_deck[idx]
+        if card is not None:
+            deck_card_boxes[i].set_text(card.getname())
+        else:
+            deck_card_boxes[i].set_text(" ")
+
+
+def return_cards_to_deck():
+    player_1.replenish_deck()
+    player_2.replenish_deck()
 
 
 # setup
@@ -905,16 +980,18 @@ new_game = None
 active_ui_elements = []
 new_game = None
 current_profile = "P1"
+deck_card_boxes = None
 
 # main loop
 def main():
     run = True
 
     human_cards, elf_cards, dwarf_cards, undead_cards, race_card_length = declare_cards()
-    game_state, screen_drawn, current_race, play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button, deck_left, deck_right, top_card, human, elf, dwarf, undead, description, current_race_card_button, race_right, race_left, deck_size_count, select, replay, pause_button, background, resume, close_button = declare_variables()
+    game_state, screen_drawn, current_race, play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button, deck_left, deck_right, top_card_ui, human, elf, dwarf, undead, description, current_race_card_button, race_right, race_left, select, replay, pause_button, background, resume, close_button, card_slot1, card_slot2, card_slot3, card_slot4, card_slot5, card_slot6 = declare_variables()
     
     global new_game # assigning new_game as a global variable for use in main game function
-    index = 0
+    global current_profile
+    global deck_card_boxes
 
     while run:
         time_delta = clock.tick(fps) / 1000.0
@@ -936,7 +1013,6 @@ def main():
                 # MAIN MENU BUTTON HANDLING
                 if event.ui_element == player_select_button:
                     print("Profile swapped")
-                    global current_profile
 
                     if current_profile == "P1":
                         current_profile = "P2"
@@ -944,6 +1020,9 @@ def main():
                         current_profile = "P1"
 
                     player_select_button.set_text(current_profile)
+                    current_deck = update_current_deck()
+                    if deck_card_boxes:
+                        update_deck_ui(current_deck, front_pointer, back_pointer, deck_card_boxes)
 
                 elif event.ui_element == play_button:
                     print("Game started")
@@ -988,45 +1067,67 @@ def main():
                 # DECK BUILDER BUTTON HANDLING
                 elif event.ui_element == human:
                     current_race = human_cards
-                    index = 0
-                    current_race_card, current_race_card_button = update_current_race_card(current_race, current_race_card, current_race_card_button, index)
+                    race_index = 0
+                    current_race_card, current_race_card_button = update_current_race_card(current_race, current_race_card, current_race_card_button, race_index)
 
                 elif event.ui_element == elf:
                     current_race = elf_cards
-                    index = 0
-                    current_race_card, current_race_card_button = update_current_race_card(current_race, current_race_card, current_race_card_button, index)
+                    race_index = 0
+                    current_race_card, current_race_card_button = update_current_race_card(current_race, current_race_card, current_race_card_button, race_index)
 
                 elif event.ui_element == dwarf:
-                    current_race = human_cards
-                    index = 0
-                    current_race_card, current_race_card_button = update_current_race_card(current_race, current_race_card, current_race_card_button, index)
+                    current_race = dwarf_cards
+                    race_index = 0
+                    current_race_card, current_race_card_button = update_current_race_card(current_race, current_race_card, current_race_card_button, race_index)
 
                 elif event.ui_element == undead:
                     current_race = undead_cards
-                    index = 0
-                    current_race_card, current_race_card_button = update_current_race_card(current_race, current_race_card, current_race_card_button, index)
+                    race_index = 0
+                    current_race_card, current_race_card_button = update_current_race_card(current_race, current_race_card, current_race_card_button, race_index)
 
                 elif event.ui_element == race_left:
-                    if index == 0:
-                        index = race_card_length - 1 # goes from 0 to length - 1 
+                    if race_index == 0:
+                        race_index = race_card_length - 1 # goes from 0 to length - 1 
                     else:
-                        index -= 1
+                        race_index -= 1
 
                     if current_race:
-                        current_race_card, current_race_card_button = update_current_race_card(current_race, current_race_card, current_race_card_button, index)
+                        current_race_card, current_race_card_button = update_current_race_card(current_race, current_race_card, current_race_card_button, race_index)
 
                 elif event.ui_element == race_right:
-                    if index == race_card_length - 1: # goes from 0 to length - 1 
-                        index = 0
+                    if race_index == race_card_length - 1: # goes from 0 to length - 1 
+                        race_index = 0
                     else:
-                        index += 1
+                        race_index += 1
 
                     if current_race:
-                        current_race_card, current_race_card_button = update_current_race_card(current_race, current_race_card, current_race_card_button, index)
+                        current_race_card, current_race_card_button = update_current_race_card(current_race, current_race_card, current_race_card_button, race_index)
 
                 elif event.ui_element == select:
-                    pass
+                    # logic for adding a card into top card slot
+                    if not current_deck:
+                        current_deck.insert(front_pointer, current_race_card)
+                    elif current_deck[front_pointer] != current_race_card:
+                        current_deck[front_pointer] = current_race_card.getcard().clone()
 
+                    update_deck_ui(current_deck, front_pointer, back_pointer, deck_card_boxes)
+
+                    deck_size = update_deck_size(current_deck)
+                    deck_size_panel.setname(f"{deck_size}/20 ")
+
+                    print(f"Card Added to {current_profile} Deck: {current_race_card.getname()}")
+
+                elif event.ui_element == deck_left:
+                    deck_len = len(current_deck)
+                    front_pointer = (front_pointer - 1) % deck_len
+                    back_pointer = (back_pointer - 1) % deck_len
+                    update_deck_ui(current_deck, front_pointer, back_pointer, deck_card_boxes)
+
+                elif event.ui_element == deck_right:
+                    deck_len = len(current_deck)
+                    front_pointer = (front_pointer + 1) % deck_len
+                    back_pointer = (back_pointer + 1) % deck_len
+                    update_deck_ui(current_deck, front_pointer, back_pointer, deck_card_boxes)
 
                 # PLAYING BUTTON HANDLING
                 elif event.ui_element == pause_button:
@@ -1051,8 +1152,7 @@ def main():
                     # enables background ui
                     for element in active_ui_elements:
                         element.enable()
-                
-                #-----------------------------------------------------------------------------------------------------------
+    
 
                 # UNIVERSAL BUTTON HANDLING (shows up in multiple screens)
                 elif event.ui_element == close_button:
@@ -1068,6 +1168,8 @@ def main():
                     active_ui_elements.clear()
 
                     # does action
+                    return_cards_to_deck()
+                    deck_card_boxes = None
                     game_state = "startup"
                     screen_drawn = False
 
@@ -1080,21 +1182,26 @@ def main():
         
         elif game_state == "deck":
             if not screen_drawn:
-                deck_left, deck_right, card_temp1, card_temp2, card_temp3, card_temp4, card_temp5, card_temp6, top_card, human, elf, dwarf, undead, description, current_race_card, current_race_card_button, race_right, race_left, player_select_button, deck_size_count, select, close_button = draw_deck()
+                deck_size_panel, deck_left, deck_right, card_slot1, card_slot6, card_slot2, card_slot5, card_slot3, card_slot4, top_card, top_card_ui, human, elf, dwarf, undead, description, current_race_card, current_race_card_button, race_right, race_left, player_select_button, select, close_button = draw_deck()
+
+                # updates the current race when first opening the deck builder
+                current_race = human_cards
+                race_index = 0
+                current_race_card, current_race_card_button = update_current_race_card(current_race, current_race_card, current_race_card_button, race_index)
+
+                # sets order of cards in deck
+                deck_card_boxes = [card_slot1, card_slot2, card_slot3, top_card_ui, card_slot4, card_slot5, card_slot6]
+                front_pointer = 0
+                back_pointer = 19
+                current_deck = update_current_deck()
+
+                update_deck_ui(current_deck, front_pointer, back_pointer, deck_card_boxes)
+
+                # updates the current deck size counter
+                deck_size = update_deck_size(current_deck)
+                deck_size_panel.setname(f"{deck_size}/20 ")
+
                 screen_drawn = True
-
-            deck_card_boxes = [card_temp1, card_temp2, card_temp3, card_temp4, card_temp5, card_temp6, top_card]
-
-            if current_profile == "P1":
-                current_deck = player_1.getdeck()
-            else:
-                current_deck = player_2.getdeck()
-
-            for i, box in enumerate(deck_card_boxes):
-                if i < len(current_deck):
-                    box.set_text(current_deck[i].name)
-                else:
-                    box.set_text(" ")  # empty slot
 
 
         elif game_state == "instructions":
