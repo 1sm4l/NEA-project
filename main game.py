@@ -105,6 +105,9 @@ class player:
     def gethand(self):
         return self.hand
     
+    def gethandlength(self):
+        return len(self.hand)
+    
     def sethand(self, ghand):
         self.hand = ghand
 
@@ -153,14 +156,16 @@ class player:
                 print("No cards in game.")
             
     def discard_card(self):
-        if self.hand: # if hand is not empty
+        if self.hand: 
+            # ensure only valid cards
+            self.hand = [c for c in self.hand if isinstance(c, card)]
             for card in selected_cards:
                 if card in self.hand:
-                    self.hand.remove(card) # remove card from hand
-                    self.discard_pile.append(card) # appends to discard_pile
+                    self.hand.remove(card)
+                    self.discard_pile.append(card)  # guaranteed instance
                 else:
                     print("Card not found in hand.")
-            selected_cards.clear() # clear selected cards for next player
+            selected_cards.clear()
         else:
             print("Hand is empty.")
             
@@ -247,6 +252,9 @@ class panel:
         self.name = str(gname)
         if self.label:
             self.label.set_text(self.name)
+
+    def getname(self):
+        return self.name
 
     def create_panel(self):
         centered_x = self.x - (self.width / 2)
@@ -387,8 +395,16 @@ def check_current_player():
 
 
 def switch_turn():
-    selected_cards.clear()
     current_player, opponent = check_current_player()
+
+    for x in selected_cards:
+        if x in current_player.gethand():
+            current_player.gethand().remove(x)
+            current_player.getdiscard_pile().append(x)
+
+    print(current_player.gethandlength())
+
+    selected_cards.clear()
     current_player.draw_card()
     if current_player.getenergy() <= 8:
         current_player.setenergy(current_player.getenergy() + 2)
@@ -452,22 +468,17 @@ def take_turn():
         total_damage, total_heal, total_energy_cost = result # take total_damage, total_heal, total_energy_cost as parameters to change ui
         print(f"Used {total_energy_cost} energy, dealt {total_damage} damage, healed {total_heal} HP.")
 
-        current_player.draw_card()
-        new_game.next_turn()  
-        switch_turn()
-
-
 
 # checks if a player hits 0 health, then sets the other player as the winner and sets game as over
 def check_game_over():
     current_player, opponent = check_current_player()
 
-    if current_player.gethealth() == 0 and opponent.gethealth() == 0: # if both players die
+    if current_player.gethealth() <= 0 and opponent.gethealth() <= 0: # if both players die
         new_game.setwinner("DRAW.")
         new_game.setgame_over()
         return True
     
-    elif new_game.getturn_counter() > 15: # if turn counter > max rounds (if no one dies)
+    elif new_game.getturn_counter() > 10: # if turn counter > max rounds (if no one dies)
 
         if current_player.gethealth() > opponent.gethealth(): # if player has more health than opponent
             new_game.setwinner(f"{current_player.getname()} WINS.")
@@ -476,7 +487,7 @@ def check_game_over():
         
         elif current_player.gethealth() < opponent.gethealth():  # if opponent has more health than player
             new_game.setwinner(f"{opponent.getname()} WINS.")
-            new_game.setgame_over()
+            new_game.setgame_over() 
             return True
         
         else: # if they have the same health at the end of the game
@@ -484,18 +495,18 @@ def check_game_over():
             new_game.setgame_over()
             return True
         
-    elif opponent.gethealth() == 0: # if opponent dies
+    elif opponent.gethealth() <= 0: # if opponent dies
         new_game.setwinner(f"{current_player.getname()} WINS.")
         new_game.setgame_over()
         return True
     
-    elif current_player.gethealth() == 0: # if current player kills themself
+    elif current_player.gethealth() <= 0: # if current player kills themself
         new_game.setwinner(f"{opponent.getname()} WINS.")
         new_game.setgame_over()
         return True
     
     else:
-         return False
+        return False
 
 #---------------------------------------------------------------------------------------
 
@@ -680,7 +691,6 @@ def draw_instructions():
 def draw_playing():
     screen.fill([150, 0, 0])  # background colour
 
-
     # GREY BACKGROUND BOXES
     # left box
     left = panel(" ", (width // 4) - 200, height / 2, 500, height, manager).create_panel()
@@ -713,7 +723,8 @@ def draw_playing():
     description_panel = panel("Card Description", (width // 4) - 200, height / 2 - 95, 450, 60, manager).create_panel()
 
     # timer
-    timer = panel("Timer", (width // 4) - 200, (height / 2) + 300, 450, 75, manager).create_panel()
+    timer = panel(f"1:00", (width // 4) - 200, (height / 2) + 300, 450, 75, manager)
+    timer_panel = timer.create_panel()
 
     # end round
     end_round = button("End Round", (width // 4) - 200, height / 2 + 430, 450, 125, manager).create_box()
@@ -780,7 +791,7 @@ def draw_playing():
         op_energy_panel,
         description_box_background,
         description_panel,
-        timer,
+        timer_panel,
         p_label_panel,
         op_label_panel,
         play_area, 
@@ -813,7 +824,7 @@ def draw_playing():
         card_5_button, 
     ])
 
-    return pause_button, end_round, card_1, card_2, card_3, card_4, card_5, card_1_button, card_2_button, card_3_button, card_4_button, card_5_button, description, op_health, p_health, p_energy, op_energy, round_info, p_label, op_label
+    return pause_button, end_round, card_1, card_2, card_3, card_4, card_5, card_1_button, card_2_button, card_3_button, card_4_button, card_5_button, description, op_health, p_health, p_energy, op_energy, round_info, p_label, op_label, timer
 
 
 def draw_game_ended():
@@ -965,21 +976,21 @@ def declare_variables():
 
 
 def set_default_cards(human_cards, elf_cards, dwarf_cards, undead_cards):
-    for card in human_cards:
-        player_1.addtodeck(card)
-        player_2.addtodeck(card)
+    for c in human_cards:
+        player_1.addtodeck(c.clone())
+        player_2.addtodeck(c.clone())
 
-    for card in elf_cards:
-        player_1.addtodeck(card)
-        player_2.addtodeck(card)
+    for c in elf_cards:
+        player_1.addtodeck(c.clone())
+        player_2.addtodeck(c.clone())
 
-    for card in dwarf_cards:
-        player_1.addtodeck(card)
-        player_2.addtodeck(card)
+    for c in dwarf_cards:
+        player_1.addtodeck(c.clone())
+        player_2.addtodeck(c.clone())
 
-    for card in undead_cards:
-        player_1.addtodeck(card)
-        player_2.addtodeck(card)
+    for c in undead_cards:
+        player_1.addtodeck(c.clone())
+        player_2.addtodeck(c.clone())
 
 #---------------------------------------------------------------------------------------
 
@@ -994,7 +1005,7 @@ def update_playing_info(op_health, p_health, p_energy, op_energy, round_info, p_
     p_energy.setname(f"{current_player.getenergy()} Energy")
     op_energy.setname(f"{opponent.getenergy()} Energy")
 
-    if new_game.getturn_counter() <= 15:
+    if new_game.getturn_counter() <= 10:
         round_info.setname(f"Round {new_game.getturn_counter()}")
 
     p_label.setname(current_player.getname())
@@ -1003,18 +1014,25 @@ def update_playing_info(op_health, p_health, p_energy, op_energy, round_info, p_
 
 def update_hand_cards(card_1, card_2, card_3, card_4, card_5, card_1_button, card_2_button, card_3_button, card_4_button, card_5_button):
     current_player, _ = check_current_player()
-    
-    card_1.setcard(current_player.gethand()[0])
-    card_2.setcard(current_player.gethand()[1])
-    card_3.setcard(current_player.gethand()[2])
-    card_4.setcard(current_player.gethand()[3]) 
-    card_5.setcard(current_player.gethand()[4]) 
 
-    card_1_button.set_text(current_player.gethand()[0].getname())
-    card_2_button.set_text(current_player.gethand()[1].getname()) 
-    card_3_button.set_text(current_player.gethand()[2].getname()) 
-    card_4_button.set_text(current_player.gethand()[3].getname()) 
-    card_5_button.set_text(current_player.gethand()[4].getname())  
+    hand = current_player.gethand()
+
+    for i in range(5):
+        if i < len(hand):
+            print(i, hand[i], type(hand[i]))
+
+    cards = [card_1, card_2, card_3, card_4, card_5]
+    buttons = [card_1_button, card_2_button, card_3_button, card_4_button, card_5_button]
+
+    for i in range(5):
+        if i < len(hand) and hand[i]:
+            cards[i].setcard(hand[i])
+            if len(hand) > i and hand[i]:
+                buttons[i].set_text(hand[i].getname())
+        else:
+            buttons[i].set_text(" ")
+            cards[i].setcard(" ")
+            buttons[i].disable()
 
 
 def move_card(current_player, card, index):
@@ -1022,24 +1040,27 @@ def move_card(current_player, card, index):
     original_y = int(3 * height / 4) + 100
     new_y = int(height / 2) - 150
 
-    if current_player.gethand()[index] in selected_cards:
-        card.move_to(x, original_y)
+    if len(current_player.gethand()) > index:
+        if current_player.gethand()[index] in selected_cards:
+            card.move_to(x, original_y)
 
-        # removes selected card to clicked_cards list
-        select_card(current_player.gethand()[index])
+            # removes selected card to clicked_cards list
+            select_card(current_player.gethand()[index])
 
-    else:
-        card.move_to(x, new_y)
+        else:
+            card.move_to(x, new_y)
 
-        # adds selected card to clicked_cards list
-        select_card(current_player.gethand()[index])    
+            # adds selected card to clicked_cards list
+            select_card(current_player.gethand()[index])    
 
-    screen.fill([150, 0, 0])
+        screen.fill([150, 0, 0])
+
 
 def move_card_back(card):
     x = card.getx()
     original_y = int(3 * height / 4) + 100
     card.move_to(x, original_y)
+
 
 def get_hand_card_vals(hand_card):
     attack = hand_card.getdmg()
@@ -1181,9 +1202,10 @@ clicked_card = None
 selected_cards = []
 new_game = None
 active_ui_elements = []
-new_game = None
 current_profile = "P1"
 deck_card_boxes = None
+time_left = 60  # in seconds
+elapsed_time = 0  
 
 # main loop
 def main():
@@ -1196,11 +1218,13 @@ def main():
     global current_profile
     global deck_card_boxes
     global clicked_card
+    global time_left
+    global elapsed_time
     set_default_cards(human_cards, elf_cards, dwarf_cards, undead_cards) # to remove hassle of adding all 40 cards from the get go
 
     while run:
         time_delta = clock.tick(fps) / 1000.0
-
+        
         # event handling
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -1289,15 +1313,16 @@ def main():
                     # applies card effects and switches turn
                     take_turn()
 
-                    # updates ui elements
-                    update_playing_info(op_health, p_health, p_energy, op_energy, round_info, p_label, op_label)
-                    update_hand_cards(card_1, card_2, card_3, card_4, card_5, card_1_button, card_2_button, card_3_button, card_4_button, card_5_button)
+                    # switches turn
+                    new_game.next_turn()  
+                    switch_turn()
 
                     # checks if game is over
                     if check_game_over():
                         game_state = "game_ended"
 
                         # hides player label bc its a quick fix 
+                        description_text_label.kill()
                         p_label.setname(" ")
                         op_energy.setname(" ")
 
@@ -1308,60 +1333,75 @@ def main():
                         for element in active_ui_elements:
                             element.enable()
 
+                        # resets timer
+                        timer.setname("1:00")
+                        time_left = 60
+                        elapsed_time = 0
+
+                        # updates ui elements
+                        update_playing_info(op_health, p_health, p_energy, op_energy, round_info, p_label, op_label)
+                        update_hand_cards(card_1, card_2, card_3, card_4, card_5, card_1_button, card_2_button, card_3_button, card_4_button, card_5_button)
+
+
                 elif event.ui_element == card_1_button:
                     current_player, _ = check_current_player()
 
                     # updates description
-                    attack, heal, cost, description_txt = get_hand_card_vals(card_1.getcard())
-                    description_text_label = update_description_text(attack, heal, cost, description_txt, description)
+                    if card_1.getcard() != " ":
+                        attack, heal, cost, description_txt = get_hand_card_vals(card_1.getcard())
+                        description_text_label = update_description_text(attack, heal, cost, description_txt, description)
 
-                    # moves card to/from playing area
+                        # moves card to/from playing area
 
-                    move_card(current_player, card_1, 0)
+                        move_card(current_player, card_1, 0)
 
 
                 elif event.ui_element == card_2_button:
                     current_player, _ = check_current_player()
 
                     # updates description
-                    attack, heal, cost, description_txt = get_hand_card_vals(card_2.getcard())
-                    description_text_label = update_description_text(attack, heal, cost, description_txt, description)
+                    if card_2.getcard() != " ":
+                        attack, heal, cost, description_txt = get_hand_card_vals(card_2.getcard())
+                        description_text_label = update_description_text(attack, heal, cost, description_txt, description)
 
-                    # moves card to/from playing area
-                    move_card(current_player, card_2, 1)
+                        # moves card to/from playing area
+                        move_card(current_player, card_2, 1)
 
 
                 elif event.ui_element == card_3_button:
                     current_player, _ = check_current_player()
 
                     # updates description
-                    attack, heal, cost, description_txt = get_hand_card_vals(card_3.getcard())
-                    description_text_label = update_description_text(attack, heal, cost, description_txt, description)
+                    if card_3.getcard() != " ":
+                        attack, heal, cost, description_txt = get_hand_card_vals(card_3.getcard())
+                        description_text_label = update_description_text(attack, heal, cost, description_txt, description)
 
-                    # moves card to/from playing area
-                    move_card(current_player, card_3, 2)
+                        # moves card to/from playing area
+                        move_card(current_player, card_3, 2)
 
 
                 elif event.ui_element == card_4_button:
                     current_player, _ = check_current_player()
 
                     # updates description
-                    attack, heal, cost, description_txt = get_hand_card_vals(card_4.getcard())
-                    description_text_label = update_description_text(attack, heal, cost, description_txt, description)
+                    if card_4.getcard() != " ":
+                        attack, heal, cost, description_txt = get_hand_card_vals(card_4.getcard())
+                        description_text_label = update_description_text(attack, heal, cost, description_txt, description)
 
-                    # moves card to/from playing area
-                    move_card(current_player, card_4, 3)
+                        # moves card to/from playing area
+                        move_card(current_player, card_4, 3)
 
 
                 elif event.ui_element == card_5_button:
                     current_player, _ = check_current_player() 
 
                     # updates description
-                    attack, heal, cost, description_txt = get_hand_card_vals(card_5.getcard())
-                    description_text_label = update_description_text(attack, heal, cost, description_txt, description)
+                    if card_5.getcard() != " ":
+                        attack, heal, cost, description_txt = get_hand_card_vals(card_5.getcard())
+                        description_text_label = update_description_text(attack, heal, cost, description_txt, description)
 
-                    # moves card to/from playing area
-                    move_card(current_player, card_5, 4)
+                        # moves card to/from playing area
+                        move_card(current_player, card_5, 4)
 
 
                 # DECK BUILDER BUTTON HANDLING
@@ -1511,6 +1551,7 @@ def main():
                 play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button = draw_startup()
                 screen_drawn = True
         
+
         elif game_state == "deck":
             if not screen_drawn:
                 deck_size_panel, deck_left, deck_right, card_slot1, card_slot6, card_slot2, card_slot5, card_slot3, card_slot4, top_card_ui, human, elf, dwarf, undead, description, current_race_card, current_race_card_button, race_right, race_left, player_select_button, select, close_button = draw_deck()
@@ -1544,10 +1585,11 @@ def main():
                 create_instruction_text(instruction_box)
                 screen_drawn = True
 
+
         elif game_state == "playing":
             if not screen_drawn:
                 new_game = start_game()
-                pause_button, end_round, card_1, card_2, card_3, card_4, card_5, card_1_button, card_2_button, card_3_button, card_4_button, card_5_button, description,  op_health, p_health, p_energy, op_energy, round_info, p_label, op_label = draw_playing()
+                pause_button, end_round, card_1, card_2, card_3, card_4, card_5, card_1_button, card_2_button, card_3_button, card_4_button, card_5_button, description,  op_health, p_health, p_energy, op_energy, round_info, p_label, op_label, timer = draw_playing()
 
                 # updates
                 update_hand_cards(card_1, card_2, card_3, card_4, card_5, card_1_button, card_2_button, card_3_button, card_4_button, card_5_button)
@@ -1558,17 +1600,75 @@ def main():
                 description_text_label = update_description_text(attack, heal, cost, description_txt, description)
 
                 screen_drawn = True
-            
-             
+
+            elapsed_time += time_delta  # add seconds
+
+            # reduces time_left when a full second has passed
+            while elapsed_time >= 1:
+                time_left -= 1
+                elapsed_time -= 1  # keep leftover fraction
+
+                # updates timer display
+                minutes, seconds = divmod(time_left, 60)
+                timer.setname(f"{minutes}:{seconds:02d}")
+
+                # when timer reaches 0, switches turn and resets
+                if time_left <= 0:
+
+                    # disables ui for transaction to take place
+                    for element in active_ui_elements:
+                        element.disable()
+
+                    # move cards back to original position
+                    move_card_back(card_1)
+                    move_card_back(card_2)
+                    move_card_back(card_3)
+                    move_card_back(card_4)
+                    move_card_back(card_5)
+
+                    # applies card effects and switches turn
+                    take_turn()
+
+                    # switches turn
+                    new_game.next_turn()  
+                    switch_turn()
+
+                    # checks if game is over
+                    if check_game_over():
+                        game_state = "game_ended"
+
+                        # hides player label bc its a quick fix 
+                        description_text_label.kill()
+                        p_label.setname(" ")
+                        op_energy.setname(" ")
+
+                        screen_drawn = False
+
+                    else:
+                        # enables ui
+                        for element in active_ui_elements:
+                            element.enable()
+
+                        # resets timer
+                        timer.setname("1:00")
+                        time_left = 60
+                        elapsed_time = 0
+
+                        # updates ui elements
+                        update_playing_info(op_health, p_health, p_energy, op_energy, round_info, p_label, op_label)
+                        update_hand_cards(card_1, card_2, card_3, card_4, card_5, card_1_button, card_2_button, card_3_button, card_4_button, card_5_button)
+
         elif game_state == "game_ended":
             if not screen_drawn:
                 close_button = draw_game_ended()
                 screen_drawn = True
 
+
         elif game_state == "pause_menu":
             if not screen_drawn:
                 background, resume, close_button = draw_pause_menu()
                 screen_drawn = True
+
 
         else:
             print("Game state error.")
