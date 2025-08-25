@@ -1,8 +1,8 @@
 # library imports
+import os
 import pygame
 import pygame_gui
 import random
-import textwrap
 
 pygame.init() # initialises pygame
 
@@ -317,6 +317,7 @@ class button:
         self.height = nheight
         self.manager = nmanager
         self.ui_button = None
+        self.image_element = None
 
     def setname(self, gname):
         self.name = str(gname)
@@ -341,6 +342,21 @@ class button:
             manager = self.manager
         )
         return self.ui_button
+    
+    def create_image(self, image_filename):
+        centered_x = self.x - (self.width / 2)
+        centered_y = self.y - (self.height / 2)
+
+        image_path = os.path.join("ASSETS", image_filename)
+        image_surface = pygame.image.load(image_path).convert_alpha()
+        image_surface = pygame.transform.scale(image_surface, (self.width, self.height))
+
+        self.image_element = pygame_gui.elements.UIImage(
+            relative_rect=pygame.Rect((centered_x, centered_y), (self.width, self.height)),
+            image_surface=image_surface,
+            manager=self.manager
+        )
+        return self.image_element
 
 
 # in_game card button and for deck asw. when clicked, it calls select_card(card) with card val from getcard(self)
@@ -360,7 +376,15 @@ class card_button(button):
     def move_to(self, new_x, new_y):
         self.x = new_x
         self.y = new_y
-        self.ui_button.set_relative_position((new_x - (self.width / 2), new_y - (self.height / 2)))
+
+        centered_pos = (new_x - (self.width // 2), new_y - (self.height // 2))
+
+        # move button
+        self.ui_button.set_relative_position(centered_pos)
+
+        # move image too if one exists
+        if hasattr(self, "image_element") and self.image_element is not None:
+            self.image_element.set_relative_position(centered_pos)
 
 #---------------------------------------------------------------------------------------
 
@@ -513,14 +537,16 @@ def check_game_over():
 
 #----------------------------------------UI SECTION-------------------------------------
 def draw_startup():
-    screen.fill([150, 0, 0])  # background colour
+    image_surface = pygame.image.load("ASSETS/TEXT/title text.png").convert_alpha()
+    scaled_surface = pygame.transform.scale(image_surface, (1000, 250))
 
-    # TITLE TEXT
-    pygame_gui.elements.UILabel(
-        relative_rect=pygame.Rect((width // 2 - 300, height // 2 - 200), (600, 100)),
-        text="Twine",
+    title_text = pygame_gui.elements.UIImage(
+        relative_rect=scaled_surface.get_rect(center=(width//2, (height//2) - 100)),
+        image_surface=scaled_surface,
         manager=manager
     )
+
+    active_ui_elements.append(title_text)
 
     # GREY BACKGROUND BOXES
     # middle box
@@ -560,8 +586,6 @@ def draw_startup():
 
 
 def draw_deck():
-    screen.fill([150, 0, 0])  # background colour
-
     # background panel
     background = panel(" ", width // 2, int(height / 2), 1000, 800, manager).create_panel()
 
@@ -569,22 +593,28 @@ def draw_deck():
     deck_left = button("<  ", width // 2 - 450, int(height / 2) + 120, 50, 50, manager).create_box()
     deck_right = button(">", width // 2 + 450, int(height / 2) + 120, 50, 50, manager).create_box()
 
-    # cards 
-    # fourth row
-    card_temp1 = button(" ", width // 2 - 350, int(height / 2) + 120, 125, 225, manager).create_box()
-    card_temp2 = button(" ", width // 2 + 350, int(height / 2) + 120, 125, 225, manager).create_box()
+    # deck cards 
+    card_slot1 = button(" ", width // 2 - 350, int(height / 2) + 120, 125, 225, manager)
+    card_slot1_box = card_slot1.create_box()
 
-    # third row
-    card_temp3 = button(" ", width // 2 - 250, int(height / 2) + 120, 150, 250, manager).create_box()
-    card_temp4 = button(" ", width // 2 + 250, int(height / 2) + 120, 150, 250, manager).create_box()
+    card_slot2 = button(" ", width // 2 - 250, int(height / 2) + 120, 150, 250, manager)
+    card_slot2_box = card_slot2.create_box()
 
-    # second row
-    card_temp5 = button(" ", width // 2 - 150, int(height / 2) + 120, 175, 275, manager).create_box()
-    card_temp6 = button(" ", width // 2 + 150, int(height / 2) + 120, 175, 275, manager).create_box()
+    card_slot3 = button(" ", width // 2 - 150, int(height / 2) + 120, 175, 275, manager)
+    card_slot3_box = card_slot3.create_box()
 
-    # top
     top_card = card_button(" ", width // 2, int(height / 2) + 120, 200, 300, manager, "")
     top_card_ui = top_card.create_box()
+
+    card_slot4 = button(" ", width // 2 + 150, int(height / 2) + 120, 175, 275, manager)
+    card_slot4_box = card_slot4.create_box()
+
+    card_slot5 = button(" ", width // 2 + 250, int(height / 2) + 120, 150, 250, manager)
+    card_slot5_box = card_slot5.create_box()
+
+    card_slot6 = button(" ", width // 2 + 350, int(height / 2) + 120, 125, 225, manager)
+    card_slot6_box = card_slot6.create_box()
+
 
     # race
     race_temp1 = panel("Races", width // 2 - 325, int(height / 2) - 350, 275, 60, manager).create_panel()
@@ -626,12 +656,12 @@ def draw_deck():
         # labels
         background,
         
-        card_temp1,
-        card_temp2,
-        card_temp3,
-        card_temp4,
-        card_temp5,
-        card_temp6,
+        card_slot1_box,
+        card_slot2_box,
+        card_slot3_box,
+        card_slot4_box,
+        card_slot5_box,
+        card_slot6_box,
 
         race_temp1,
         race_temp2,
@@ -659,11 +689,12 @@ def draw_deck():
         close_button
     ])
 
-    return  deck_size_panel, deck_left, deck_right, card_temp1, card_temp2, card_temp3, card_temp4, card_temp5, card_temp6, top_card_ui, human, elf, dwarf, undead, description, current_race_card, current_race_card_button, race_right, race_left, player_select_button, select, close_button
+    return  deck_size_panel, deck_left, deck_right, card_slot1, card_slot2, card_slot3, card_slot4, card_slot5, card_slot6, top_card, human, elf, dwarf, undead, description, current_race_card, current_race_card_button, race_right, race_left, player_select_button, select, close_button
     
 
 def draw_instructions():
-    screen.fill([150, 0, 0])  # background colour
+    startup_background_image, _, _ = declare_images()
+    screen.blit(startup_background_image, (0, 0))  # background colour
 
     # background panel
     background = panel(" ", width // 2, int(height / 2), 1000, 800, manager).create_panel()
@@ -689,8 +720,6 @@ def draw_instructions():
 
 
 def draw_playing():
-    screen.fill([150, 0, 0])  # background colour
-
     # GREY BACKGROUND BOXES
     # left box
     left = panel(" ", (width // 4) - 200, height / 2, 500, height, manager).create_panel()
@@ -857,7 +886,7 @@ def draw_game_ended():
 
 
 def draw_pause_menu():
-    screen.fill([150, 0, 0])  # background colour
+    draw_playing_background()  # background colour
 
     # background panel
     background = panel(" ", width // 2, int(height / 2), 1000, 800, manager).create_panel()
@@ -886,40 +915,40 @@ def draw_pause_menu():
 
 def declare_cards():
     # Human cards
-    greedy_medic = card("Greedy Medic", "Human", 0, 20, 2, "Heals big but drains your wallet.", 1)
-    soldier = card("Soldier", "Human", 10, 0, 1, "Reliable and cheap.", 2)
-    combat_medic = card("Combat Medic", "Human", 10, 10, 2, "Supportive all-rounder.", 3)
-    sergeant = card("Sergeant", "Human", 20, 0, 2, "Clean strike.", 4)
-    alchemist = card("Alchemist", "Human", 30, -15, 3, "Risky gamble for burst.", 5)
+    scheming_saint = card("Scheming Saint", "HUMAN", 0, 20, 2, "Heals big but drains your wallet.", 1)
+    soldier = card("Soldier", "HUMAN", 10, 0, 1, "Reliable and cheap.", 2)
+    combat_medic = card("Combat Medic", "HUMAN", 10, 10, 2, "Supportive all-rounder.", 3)
+    sergeant = card("Sergeant", "HUMAN", 20, 0, 2, "Clean strike.", 4)
+    alchemist = card("Alchemist", "HUMAN", 30, -15, 3, "Risky gamble for burst.", 5)
 
-    human_cards = [greedy_medic, soldier, combat_medic, sergeant, alchemist]
+    human_cards = [scheming_saint, soldier, combat_medic, sergeant, alchemist]
 
     # Elf cards
-    grand_elf = card("Grand Elf", "Elf", 5, 15, 2, "Graceful and precise.", 6)
-    natures_touch = card("Nature's Touch", "Elf", 0, 25, 2, "Great stall tool.", 7)
-    moonblade = card("Moonblade", "Elf", 10, 5, 1, "Nimble strike.", 8)
-    arcane_warden = card("Arcane Warden", "Elf", 15, 10, 2, "Versatile role.", 9)
-    lifeweaver = card("Lifeweaver", "Elf", 5, 30, 3, "Big sustain.", 10)
+    grand_elf = card("Grand Elf", "ELF", 5, 15, 2, "Graceful and precise.", 6)
+    natures_touch = card("Nature's Touch", "ELF", 0, 25, 2, "Great stall tool.", 7)
+    moonblade = card("Moonblade", "ELF", 10, 5, 1, "Nimble strike.", 8)
+    arcane_warden = card("Arcane Warden", "ELF", 15, 10, 2, "Versatile role.", 9)
+    lifeweaver = card("Life Weaver", "ELF", 5, 30, 3, "Big sustain.", 10)
 
     elf_cards = [grand_elf, natures_touch, moonblade, arcane_warden, lifeweaver]
 
     # Dwarf cards
-    urdunnir = card("Urdunnir", "Dwarf", 15, 0, 1, "Strong basic hit.", 11)
-    war_smith = card("War Smith", "Dwarf", 25, 0, 2, "Smashes through defences.", 12)
-    iron_veteran = card("Iron Veteran", "Dwarf", 20, 5, 2, "Battle-hardened support.", 13)
-    brewmaster = card("Brewmaster", "Dwarf", 10, 15, 3, "Heavy hitter and healer.", 14)
-    anvil_guard = card("Anvil Guard", "Dwarf", 30, 0, 4, "Titan strike.", 15)
+    urdunnir = card("Urdunnir", "DWARF", 15, 0, 1, "Strong basic hit.", 11)
+    war_smith = card("War Smith", "DWARF", 25, 0, 2, "Smashes through defences.", 12)
+    iron_veteran = card("Iron Veteran", "DWARF", 20, 5, 2, "Battle-hardened support.", 13)
+    brewmaster = card("Brewmaster", "DWARF", 10, 15, 3, "Heavy hitter and healer.", 14)
+    anvil_guard = card("Anvil Guard", "DWARF", 30, 0, 4, "Titan strike.", 15)
 
     dwarf_cards = [urdunnir, war_smith, iron_veteran, brewmaster, anvil_guard]
 
     # Undead cards
-    skeleton = card("Skeleton", "Undead", 10, 0, 1, "Cheap and effective.", 16)
-    blood_pact = card("Blood Pact", "Undead", 20, -10, 2, "Burn yourself to burn others.", 17)
-    wraith_blade = card("Wraith Blade", "Undead", 30, -20, 3, "Glass cannon peak.", 18)
-    ghoul = card("Ghoul", "Undead", 15, -5, 2, "Harms enemies and self slightly.", 19)
-    death_priest = card("Death Priest", "Undead", 5, 15, 2, "Dark support.", 20)
+    witch = card("Witch", "UNDEAD", 10, 0, 1, "Cheap and effective.", 16)
+    blood_pact = card("Blood Pact", "UNDEAD", 20, -10, 2, "Burn yourself to burn others.", 17)
+    wraith_blade = card("Wraith Blade", "UNDEAD", 30, -20, 3, "Glass cannon peak.", 18)
+    ghoul = card("Ghoul", "UNDEAD", 15, -5, 2, "Harms enemies and self slightly.", 19)
+    death_priest = card("Death Priest", "UNDEAD", 5, 15, 2, "Dark support.", 20)
 
-    undead_cards = [skeleton, blood_pact, wraith_blade, ghoul, death_priest]
+    undead_cards = [witch, blood_pact, wraith_blade, ghoul, death_priest]
 
     race_card_length = 5
 
@@ -971,8 +1000,9 @@ def declare_variables():
     cost = None
     description_txt = None
     instruction_box = None
+    timer = None
 
-    return instruction_box, attack, heal, cost, description_txt, card_1_button, card_2_button, card_3_button, card_4_button, card_5_button, game_state, screen_drawn, current_race, play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button, deck_left, deck_right, top_card_ui, human, elf, dwarf, undead, current_race_card_button, race_right, race_left, select, replay, pause_button, background, resume, close_button, card_slot1, card_slot2, card_slot3, card_slot4, card_slot5, card_slot6, end_round
+    return timer, instruction_box, attack, heal, cost, description_txt, card_1_button, card_2_button, card_3_button, card_4_button, card_5_button, game_state, screen_drawn, current_race, play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button, deck_left, deck_right, top_card_ui, human, elf, dwarf, undead, current_race_card_button, race_right, race_left, select, replay, pause_button, background, resume, close_button, card_slot1, card_slot2, card_slot3, card_slot4, card_slot5, card_slot6, end_round
 
 
 def set_default_cards(human_cards, elf_cards, dwarf_cards, undead_cards):
@@ -992,6 +1022,25 @@ def set_default_cards(human_cards, elf_cards, dwarf_cards, undead_cards):
         player_1.addtodeck(c.clone())
         player_2.addtodeck(c.clone())
 
+
+def declare_images():
+    # draw startup background
+    startup_background_image = pygame.image.load("ASSETS/BACKGROUNDS/startup_background.png").convert()
+    # scale to window size
+    startup_background_image = pygame.transform.scale(startup_background_image, (width, height))
+
+    # draw startup background
+    player_1_background_image = pygame.image.load("ASSETS/BACKGROUNDS/player_1_background.png").convert()
+    # scale to window size
+    player_1_background_image = pygame.transform.scale(player_1_background_image, (width, height))
+
+    # draw startup background
+    player_2_background_image = pygame.image.load("ASSETS/BACKGROUNDS/player_2_background.png").convert()
+    # scale to window size
+    player_2_background_image = pygame.transform.scale(player_2_background_image, (width, height))
+    
+    return startup_background_image, player_1_background_image, player_2_background_image
+
 #---------------------------------------------------------------------------------------
 
 
@@ -999,6 +1048,8 @@ def set_default_cards(human_cards, elf_cards, dwarf_cards, undead_cards):
 
 def update_playing_info(op_health, p_health, p_energy, op_energy, round_info, p_label, op_label):
     current_player, opponent = check_current_player()
+
+    draw_playing_background()
 
     op_health.setname(f"Opponent Health: {opponent.gethealth()}")
     p_health.setname(f"Player Health: {current_player.gethealth()}")
@@ -1028,7 +1079,12 @@ def update_hand_cards(card_1, card_2, card_3, card_4, card_5, card_1_button, car
         if i < len(hand) and hand[i]:
             cards[i].setcard(hand[i])
             if len(hand) > i and hand[i]:
-                buttons[i].set_text(hand[i].getname())
+                image = cards[i].create_image(
+                    f"CARDS/{cards[i].getcard().gettype()}/{cards[i].getcard().getname()}.png"
+                )
+                # attach a tag directly to the image object
+                setattr(image, "_tag", f"cardimage_{i}_{hand[i].getname()}")
+                active_ui_elements.append(image)
         else:
             buttons[i].set_text(" ")
             cards[i].setcard(" ")
@@ -1053,7 +1109,7 @@ def move_card(current_player, card, index):
             # adds selected card to clicked_cards list
             select_card(current_player.gethand()[index])    
 
-        screen.fill([150, 0, 0])
+        draw_playing_background()
 
 
 def move_card_back(card):
@@ -1070,6 +1126,32 @@ def get_hand_card_vals(hand_card):
     
     return attack, heal, cost, description_txt 
 
+
+def clear_card_images():
+    global active_ui_elements
+    to_remove = [e for e in active_ui_elements if getattr(e, "_tag", "").startswith("cardimage_")]
+
+    for e in to_remove:
+        if hasattr(e, "kill"):
+            e.kill()  # remove from UI and screen
+        elif hasattr(e, "disable"):
+            e.disable()  # stop interaction
+
+    # drop from registry
+    active_ui_elements = [e for e in active_ui_elements if e not in to_remove]
+
+    # redraw background
+    draw_playing_background()
+
+
+def draw_playing_background():
+    _, player_1_background_image, player_2_background_image = declare_images()
+
+    if new_game.getcurrent_player_index() == 1:
+        screen.blit(player_1_background_image, (0, 0))
+    else:
+        screen.blit(player_2_background_image, (0, 0))
+
 #---------------------------------------------------------------------------------------
 
 
@@ -1077,7 +1159,8 @@ def get_hand_card_vals(hand_card):
 
 def update_current_race_card(current_race, current_race_card, current_race_card_button, index):
     current_race_card.setcard(current_race[index])
-    current_race_card.setname(current_race[index].getname())
+    current_race_card_image = current_race_card.create_image(f"CARDS/{current_race[index].gettype()}/{current_race[index].getname()}.png")
+    active_ui_elements.append(current_race_card_image)
     current_race_card_button.set_text(current_race[index].getname())
     
     return current_race_card, current_race_card_button
@@ -1121,9 +1204,21 @@ def update_deck_ui(current_deck, front_pointer, back_pointer, deck_card_boxes):
     for i, idx in enumerate(indices):
         card = current_deck[idx]
         if card is not None:
-            deck_card_boxes[i].set_text(card.getname())
+            active_ui_elements.append(deck_card_boxes[i].create_image(f"CARDS/{card.gettype()}/{card.getname()}.png")) 
         else:
-            deck_card_boxes[i].set_text(" ")
+            deck_card_boxes[i].setname(" ")
+
+    # fixing order
+    for offset in range(3, -1, -1):
+        idx = (front_pointer + offset) % deck_len
+        card = current_deck[idx]
+
+        if card is not None:
+            element = deck_card_boxes[3 + offset].create_image(
+                f"CARDS/{card.gettype()}/{card.getname()}.png"
+            )
+            active_ui_elements.append(element)
+            element.focus()
 
 
 def return_cards_to_deck():
@@ -1206,25 +1301,29 @@ current_profile = "P1"
 deck_card_boxes = None
 time_left = 60  # in seconds
 elapsed_time = 0  
+timer_paused = False
 
 # main loop
 def main():
     run = True
 
     human_cards, elf_cards, dwarf_cards, undead_cards, race_card_length = declare_cards()
-    instruction_box, attack, heal, cost, description_txt, card_1_button, card_2_button, card_3_button, card_4_button, card_5_button, game_state, screen_drawn, current_race, play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button, deck_left, deck_right, top_card_ui, human, elf, dwarf, undead, current_race_card_button, race_right, race_left, select, replay, pause_button, background, resume, close_button, card_slot1, card_slot2, card_slot3, card_slot4, card_slot5, card_slot6, end_round = declare_variables()
-    
-    global new_game # assigning new_game as a global variable for use in main game function
+    timer, instruction_box, attack, heal, cost, description_txt, card_1_button, card_2_button, card_3_button, card_4_button, card_5_button, game_state, screen_drawn, current_race, play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button, deck_left, deck_right, top_card_ui, human, elf, dwarf, undead, current_race_card_button, race_right, race_left, select, replay, pause_button, background, resume, close_button, card_slot1, card_slot2, card_slot3, card_slot4, card_slot5, card_slot6, end_round = declare_variables()
+    startup_background_image, player_1_background_image, player_2_background_image = declare_images()
+
+    global new_game
     global current_profile
     global deck_card_boxes
     global clicked_card
     global time_left
     global elapsed_time
+    global timer_paused
+    global active_ui_elements
     set_default_cards(human_cards, elf_cards, dwarf_cards, undead_cards) # to remove hassle of adding all 40 cards from the get go
 
     while run:
         time_delta = clock.tick(fps) / 1000.0
-        
+
         # event handling
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -1310,8 +1409,11 @@ def main():
                     move_card_back(card_4)
                     move_card_back(card_5)
 
-                    # applies card effects and switches turn
+                    # applies card effects
                     take_turn()
+
+                    # clears card images from active ui elements
+                    clear_card_images()
 
                     # switches turn
                     new_game.next_turn()  
@@ -1516,14 +1618,17 @@ def main():
                     resume.kill()
                     close_button.kill()
 
-                    screen.fill([155, 0, 0])
+                    draw_playing_background()
 
                     update_playing_info(op_health, p_health, p_energy, op_energy, round_info, p_label, op_label)
 
                     # enables background ui
                     for element in active_ui_elements:
                         element.enable()
-    
+
+                    game_state = "playing"
+                    timer_paused = False
+
 
                 # UNIVERSAL BUTTON HANDLING (shows up in multiple screens)
                 elif event.ui_element == close_button:
@@ -1539,22 +1644,38 @@ def main():
                     active_ui_elements.clear()
 
                     # does action
+                    # resets timer
+                    if timer:
+                        timer.setname("1:00")
+                        time_left = 60
+                        elapsed_time = 0
+
                     return_cards_to_deck()
                     deck_card_boxes = None
                     game_state = "startup"
+
                     screen_drawn = False
 
 
         # game logic
         if game_state == "startup":
             if not screen_drawn:
+                
+                # load background image
+                screen.blit(startup_background_image, (0, 0)) 
+
                 play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button = draw_startup()
+
                 screen_drawn = True
         
 
         elif game_state == "deck":
             if not screen_drawn:
-                deck_size_panel, deck_left, deck_right, card_slot1, card_slot6, card_slot2, card_slot5, card_slot3, card_slot4, top_card_ui, human, elf, dwarf, undead, description, current_race_card, current_race_card_button, race_right, race_left, player_select_button, select, close_button = draw_deck()
+
+                # draws background
+                screen.blit(startup_background_image, (0, 0))
+
+                deck_size_panel, deck_left, deck_right, card_slot1, card_slot2, card_slot3, card_slot4, card_slot5, card_slot6, top_card, human, elf, dwarf, undead, description, current_race_card, current_race_card_button, race_right, race_left, player_select_button, select, close_button = draw_deck()
 
                 # updates the current race when first opening the deck builder
                 current_race = human_cards
@@ -1565,7 +1686,7 @@ def main():
                 description_text_label = update_description_text(attack, heal, cost, description_txt, description)
 
                 # sets order of cards in deck
-                deck_card_boxes = [card_slot1, card_slot2, card_slot3, top_card_ui, card_slot4, card_slot5, card_slot6]
+                deck_card_boxes = [card_slot1, card_slot2, card_slot3, top_card, card_slot4, card_slot5, card_slot6]
                 front_pointer = 0
                 back_pointer = 19
                 current_deck = update_current_deck()
@@ -1589,6 +1710,10 @@ def main():
         elif game_state == "playing":
             if not screen_drawn:
                 new_game = start_game()
+
+                # draw background
+                draw_playing_background()
+
                 pause_button, end_round, card_1, card_2, card_3, card_4, card_5, card_1_button, card_2_button, card_3_button, card_4_button, card_5_button, description,  op_health, p_health, p_energy, op_energy, round_info, p_label, op_label, timer = draw_playing()
 
                 # updates
@@ -1599,74 +1724,84 @@ def main():
                 attack, heal, cost, description_txt = get_hand_card_vals(card_1.getcard())
                 description_text_label = update_description_text(attack, heal, cost, description_txt, description)
 
+                timer_paused = False
                 screen_drawn = True
 
-            elapsed_time += time_delta  # add seconds
+            if not timer_paused:
+                elapsed_time += time_delta  # add seconds
 
-            # reduces time_left when a full second has passed
-            while elapsed_time >= 1:
-                time_left -= 1
-                elapsed_time -= 1  # keep leftover fraction
+                # reduces time_left when a full second has passed
+                while elapsed_time >= 1:
+                    time_left -= 1
+                    elapsed_time -= 1  # keep leftover fraction
 
-                # updates timer display
-                minutes, seconds = divmod(time_left, 60)
-                timer.setname(f"{minutes}:{seconds:02d}")
+                    # updates timer display
+                    minutes, seconds = divmod(time_left, 60)
+                    timer.setname(f"{minutes}:{seconds:02d}")
 
-                # when timer reaches 0, switches turn and resets
-                if time_left <= 0:
+                    # when timer reaches 0, switches turn and resets
+                    if time_left <= 0:
 
-                    # disables ui for transaction to take place
-                    for element in active_ui_elements:
-                        element.disable()
-
-                    # move cards back to original position
-                    move_card_back(card_1)
-                    move_card_back(card_2)
-                    move_card_back(card_3)
-                    move_card_back(card_4)
-                    move_card_back(card_5)
-
-                    # applies card effects and switches turn
-                    take_turn()
-
-                    # switches turn
-                    new_game.next_turn()  
-                    switch_turn()
-
-                    # checks if game is over
-                    if check_game_over():
-                        game_state = "game_ended"
-
-                        # hides player label bc its a quick fix 
-                        description_text_label.kill()
-                        p_label.setname(" ")
-                        op_energy.setname(" ")
-
-                        screen_drawn = False
-
-                    else:
-                        # enables ui
+                        # disables ui for transaction to take place
                         for element in active_ui_elements:
-                            element.enable()
+                            element.disable()
 
-                        # resets timer
-                        timer.setname("1:00")
-                        time_left = 60
-                        elapsed_time = 0
+                        # move cards back to original position
+                        move_card_back(card_1)
+                        move_card_back(card_2)
+                        move_card_back(card_3)
+                        move_card_back(card_4)
+                        move_card_back(card_5)
 
-                        # updates ui elements
-                        update_playing_info(op_health, p_health, p_energy, op_energy, round_info, p_label, op_label)
-                        update_hand_cards(card_1, card_2, card_3, card_4, card_5, card_1_button, card_2_button, card_3_button, card_4_button, card_5_button)
+                        # applies card effects and switches turn
+                        take_turn()
+
+                        # switches turn
+                        new_game.next_turn()  
+                        switch_turn()
+
+                        # checks if game is over
+                        if check_game_over():
+                            game_state = "game_ended"
+
+                            # hides player label bc its a quick fix 
+                            description_text_label.kill()
+                            p_label.setname(" ")
+                            op_energy.setname(" ")
+
+                            screen_drawn = False
+
+                        else:
+                            # enables ui
+                            for element in active_ui_elements:
+                                element.enable()
+
+                            # resets timer
+                            timer.setname("1:00")
+                            time_left = 60
+                            elapsed_time = 0
+
+                            # updates ui elements
+                            update_playing_info(op_health, p_health, p_energy, op_energy, round_info, p_label, op_label)
+
+                            # clear card ui images 
+                            clear_card_images()
+
+                            update_hand_cards(card_1, card_2, card_3, card_4, card_5, card_1_button, card_2_button, card_3_button, card_4_button, card_5_button)
 
         elif game_state == "game_ended":
+
             if not screen_drawn:
                 close_button = draw_game_ended()
                 screen_drawn = True
 
 
         elif game_state == "pause_menu":
+
             if not screen_drawn:
                 background, resume, close_button = draw_pause_menu()
+
+                timer_paused = True
                 screen_drawn = True
 
 
