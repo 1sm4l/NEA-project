@@ -559,12 +559,31 @@ def draw_startup():
     right_box = panel(" ", width - (width // 4) + 200, int(3 * height / 4), 140, 140, manager).create_panel()
 
     # BUTTONS
-    play_button = button("PLAY", width // 2 - 320, int(3 * height / 4), 200, 100, manager).create_box()
-    instructions_button = button("INSTRUCTIONS", width // 2 - 105, int(3 * height / 4) + 10, 180, 80, manager).create_box()
-    exit_button = button("EXIT", width // 2 + 105, int(3 * height / 4) + 10, 180, 80, manager).create_box()
-    edit_deck = button("EDIT DECK", width // 2 + 320, int(3 * height / 4), 200, 100, manager).create_box()
-    player_select_button = button(current_profile, (width // 4) - 200, int(3 * height / 4), 100, 100, manager).create_box()
-    settings_button = button("SETTINGS", width - (width // 4) + 200, int(3 * height / 4), 100, 100, manager).create_box()
+    play = button(" ", width // 2 - 320, int(3 * height / 4), 200, 100, manager)
+    play_button = play.create_box()
+    play_image = play.create_image("BUTTONS/PLAY image.png")
+
+    instructions = button(" ", width // 2 - 105, int(3 * height / 4) + 10, 180, 80, manager)
+    instructions_button = instructions.create_box()
+    instructions_image = instructions.create_image("BUTTONS/INSTRUCTIONS image.png")
+
+    quit = button(" ", width // 2 + 105, int(3 * height / 4) + 10, 180, 80, manager)
+    quit_button = quit.create_box()
+    quit_image = quit.create_image("BUTTONS/QUIT image.png")
+
+    edit_deck = button(" ", width // 2 + 320, int(3 * height / 4), 200, 100, manager)
+    edit_deck_button = edit_deck.create_box()
+    edit_deck_image = edit_deck.create_image("BUTTONS/EDIT DECK image.png")
+
+    player_select = button(current_profile, (width // 4) - 200, int(3 * height / 4), 100, 100, manager)
+    player_select_button = player_select.create_box()
+    player_select_image = None
+    player_select_image = change_profile_image(player_select, player_select_image)
+
+    settings = button(" ", width - (width // 4) + 200, int(3 * height / 4), 100, 100, manager)
+    settings_button = settings.create_box()
+    settings_image = settings.create_image("BUTTONS/SETTINGS image.png")
+
 
     # add to active elements
     active_ui_elements.extend([
@@ -574,15 +593,20 @@ def draw_startup():
         right_box,
 
         # buttons
+        play_image,
+        instructions_image,
+        quit_image,
+        edit_deck_image,
+        settings_image,
         play_button,
         instructions_button,
-        exit_button,
-        edit_deck,
+        quit_button,
+        edit_deck_button,
         player_select_button,
         settings_button
     ])
 
-    return play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button
+    return player_select_image, player_select, play_button, instructions_button, quit_button, edit_deck_button, player_select_button, settings_button
 
 
 def draw_deck():
@@ -968,8 +992,8 @@ def declare_variables():
     card_5_button = None
     play_button = None
     instructions_button = None
-    exit_button = None
-    edit_deck = None
+    quit_button = None
+    edit_deck_button = None
     player_select_button = None
     settings_button = None
     deck_left = None
@@ -1001,8 +1025,9 @@ def declare_variables():
     description_txt = None
     instruction_box = None
     timer = None
+    player_select_image = None
 
-    return timer, instruction_box, attack, heal, cost, description_txt, card_1_button, card_2_button, card_3_button, card_4_button, card_5_button, game_state, screen_drawn, current_race, play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button, deck_left, deck_right, top_card_ui, human, elf, dwarf, undead, current_race_card_button, race_right, race_left, select, replay, pause_button, background, resume, close_button, card_slot1, card_slot2, card_slot3, card_slot4, card_slot5, card_slot6, end_round
+    return player_select_image, timer, instruction_box, attack, heal, cost, description_txt, card_1_button, card_2_button, card_3_button, card_4_button, card_5_button, game_state, screen_drawn, current_race, play_button, instructions_button, quit_button, edit_deck_button, player_select_button, settings_button, deck_left, deck_right, top_card_ui, human, elf, dwarf, undead, current_race_card_button, race_right, race_left, select, replay, pause_button, background, resume, close_button, card_slot1, card_slot2, card_slot3, card_slot4, card_slot5, card_slot6, end_round
 
 
 def set_default_cards(human_cards, elf_cards, dwarf_cards, undead_cards):
@@ -1040,6 +1065,26 @@ def declare_images():
     player_2_background_image = pygame.transform.scale(player_2_background_image, (width, height))
     
     return startup_background_image, player_1_background_image, player_2_background_image
+
+#---------------------------------------------------------------------------------------
+
+
+#-----------------------------------STARTUP FUNCTIONS-----------------------------------
+
+def change_profile_image(player_select, player_select_image):
+
+    if player_select_image:
+        if player_select_image in active_ui_elements:
+            player_select_image.kill()
+            active_ui_elements.remove(player_select_image)
+
+    if current_profile == "P1":
+        player_select_image = player_select.create_image("BUTTONS/PROFILE 1 image.png")
+    else:
+        player_select_image = player_select.create_image("BUTTONS/PROFILE 2 image.png")
+    active_ui_elements.append(player_select_image)
+
+    return player_select_image
 
 #---------------------------------------------------------------------------------------
 
@@ -1308,7 +1353,7 @@ def main():
     run = True
 
     human_cards, elf_cards, dwarf_cards, undead_cards, race_card_length = declare_cards()
-    timer, instruction_box, attack, heal, cost, description_txt, card_1_button, card_2_button, card_3_button, card_4_button, card_5_button, game_state, screen_drawn, current_race, play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button, deck_left, deck_right, top_card_ui, human, elf, dwarf, undead, current_race_card_button, race_right, race_left, select, replay, pause_button, background, resume, close_button, card_slot1, card_slot2, card_slot3, card_slot4, card_slot5, card_slot6, end_round = declare_variables()
+    player_select_image, timer, instruction_box, attack, heal, cost, description_txt, card_1_button, card_2_button, card_3_button, card_4_button, card_5_button, game_state, screen_drawn, current_race, play_button, instructions_button, quit_button, edit_deck_button, player_select_button, settings_button, deck_left, deck_right, top_card_ui, human, elf, dwarf, undead, current_race_card_button, race_right, race_left, select, replay, pause_button, background, resume, close_button, card_slot1, card_slot2, card_slot3, card_slot4, card_slot5, card_slot6, end_round = declare_variables()
     startup_background_image, player_1_background_image, player_2_background_image = declare_images()
 
     global new_game
@@ -1344,8 +1389,12 @@ def main():
 
                     if current_profile == "P1":
                         current_profile = "P2"
+                        if game_state == "startup":
+                            player_select_image = change_profile_image(player_select, player_select_image)
                     else:
                         current_profile = "P1"
+                        if game_state == "startup":
+                            player_select_image = change_profile_image(player_select, player_select_image)
 
                     player_select_button.set_text(current_profile)
                     current_deck = update_current_deck()
@@ -1378,12 +1427,12 @@ def main():
                     game_state = "instructions"
                     screen_drawn = False
 
-                elif event.ui_element == exit_button:
+                elif event.ui_element == quit_button:
                     print("Game Closed.")
                     screen_drawn = False
                     run = False
 
-                elif event.ui_element == edit_deck:
+                elif event.ui_element == edit_deck_button:
                     print("Entered deck builder")
                     current_race = None
 
@@ -1664,7 +1713,7 @@ def main():
                 # load background image
                 screen.blit(startup_background_image, (0, 0)) 
 
-                play_button, instructions_button, exit_button, edit_deck, player_select_button, settings_button = draw_startup()
+                player_select_image, player_select, play_button, instructions_button, quit_button, edit_deck_button, player_select_button, settings_button = draw_startup()
 
                 screen_drawn = True
         
