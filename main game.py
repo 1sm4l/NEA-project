@@ -284,7 +284,6 @@ class panel:
 
         label_width = 200
         label_height = 30
-
         label_x = (self.width - label_width) // 2
         label_y = (self.height - label_height) // 2
 
@@ -372,14 +371,13 @@ class button:
         return self.y
 
     def create_box(self):
-
         centered_x = self.x - (self.width / 2)
         centered_y = self.y - (self.height / 2)
 
         self.ui_button = pygame_gui.elements.UIButton(
-            relative_rect = pygame.Rect((centered_x, centered_y), (self.width, self.height)),
+            relative_rect=pygame.Rect((centered_x, centered_y), (self.width, self.height)),
             text=self.name,
-            manager = self.manager
+            manager=self.manager
         )
         return self.ui_button
     
@@ -587,10 +585,6 @@ def draw_startup():
     )
 
     active_ui_elements.append(title_text)
-
-    # loading images
-    middle_panel_surface = pygame.image.load("assets/BUTTONS/STARTUP/MIDDLE panel image.png").convert_alpha()
-    side_panel_surface = pygame.image.load("assets/BUTTONS/STARTUP/SIDE panel image.png").convert_alpha()
 
     # GREY BACKGROUND BOXES
     # middle box
@@ -814,8 +808,10 @@ def draw_instructions():
     instruction_box = panel(" ", width // 2, int(height / 2) - 50, 900, 600, manager)
     text_temp = instruction_box.create_panel()
 
-    # close button   
-    close_button = button("Back To Menu", width // 2, int(height / 2) + 330, 900, 80, manager).create_box()
+    # close button  
+    close =  button("Back To Menu", width // 2, int(height / 2) + 330, 900, 80, manager)
+    close_button = close.create_box()
+    close_image = close.create_image("BUTTONS/DECK/BACK image.png")
 
     # add to active element
     active_ui_elements.extend([
@@ -824,7 +820,11 @@ def draw_instructions():
         text_temp,
 
         # buttons
-        close_button
+        close_button,
+
+        # images
+        close_image
+
     ])
     
     return close_button, instruction_box
@@ -977,8 +977,6 @@ def draw_playing():
 
 
 def draw_game_ended():
-    screen.fill([150, 0, 0])  # background colour
-
     # background panel
     background = panel(" ", width // 2, int(height / 2), 1000, 800, manager).create_panel()
 
@@ -986,10 +984,14 @@ def draw_game_ended():
     w_l = panel(new_game.getwinner(), width // 2, int(height / 2) - 150, 800, 240, manager).create_panel()
 
     # replay button
-    replay = button("Replay", width // 2, int(height / 2) + 150, 800, 80, manager).create_box()
+    replay_instance = button("Replay", width // 2, int(height / 2) + 150, 800, 80, manager)
+    replay = replay_instance.create_box()
+    replay_image = replay_instance.create_image("BUTTONS/GAME_ENDED/REPLAY image.png")
 
     # close button
-    close_button = button("Back To Menu", width // 2, int(height / 2) + 250, 800, 80, manager).create_box()
+    close = button("Back To Menu", width // 2, int(height / 2) + 250, 800, 80, manager)
+    close_button = close.create_box()
+    close_image = close.create_image("BUTTONS/GAME_ENDED/BACK image.png")
 
     # add to active elements
     active_ui_elements.extend([
@@ -999,10 +1001,15 @@ def draw_game_ended():
         
         # buttons
         replay,
-        close_button
+        close_button,
+
+        # images
+        replay_image,
+        close_image 
+
     ])
 
-    return close_button
+    return close_button, replay
 
 
 def draw_pause_menu():
@@ -1462,7 +1469,7 @@ def create_instruction_text(instruction_box):
 
     f"CARDS: <br>"
     f"Each card is part of a race. Cards in a race may contain synergies or tactical combos that can be used to have an edge over the opponent. <br>"
-    f"Each card contains a cost to play, damage and heal (if it is a support card). <br>"
+    f"Each card contains a cost to play, damage and heal. <br>"
     )
 
 
@@ -1814,7 +1821,7 @@ def main():
                     back_pointer = (back_pointer + 1) % deck_len
                     update_deck_ui(current_deck, front_pointer, back_pointer, deck_card_boxes)
 
-                # PLAYING BUTTON HANDLING
+                # PAUSE MENU BUTTON HANDLING
                 elif event.ui_element == pause_button:
 
                     # disables background UI
@@ -1851,6 +1858,37 @@ def main():
                     game_state = "playing"
                     timer_paused = False
 
+                elif event.ui_element == replay:
+                    # disables background UI
+                    for element in active_ui_elements:
+                        element.enable()
+
+                    # clears current UI elements
+                    for element in active_ui_elements:
+                        element.kill()
+                    active_ui_elements.clear()
+
+                    # does action
+                    # resets timer
+                    if timer:
+                        timer.setname("1:00")
+                        time_left = 60
+                        elapsed_time = 0
+
+                    return_cards_to_deck()
+                    deck_card_boxes = None
+
+                    print("Game started")
+
+                    # clears current UI elements
+                    for element in active_ui_elements:
+                        element.kill()
+                    
+                    active_ui_elements.clear()
+
+                    # does action
+                    game_state = "playing"
+                    screen_drawn = False
 
                 # UNIVERSAL BUTTON HANDLING (shows up in multiple screens)
                 elif event.ui_element == close_button:
@@ -2030,7 +2068,11 @@ def main():
         elif game_state == "game_ended":
 
             if not screen_drawn:
-                close_button = draw_game_ended()
+
+                # draw background
+                draw_playing_background()
+
+                close_button, replay = draw_game_ended()
                 screen_drawn = True
 
 
