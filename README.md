@@ -26,7 +26,7 @@ The game aims to balance **fun, accessibility, and strategy**, while still offer
   - **Elves:** Healing and tactical  
   - **Undead:** High damage, disposable, self-sacrificing  
   - **Dwarves:** Sturdy, strong damage, minor healing  
-- Turn-based mechanics with **15 rounds**.  
+- Turn-based mechanics with **10 rounds**.  
 - Energy-based system for card costs.  
 - Sound design integrated for immersion.  
 
