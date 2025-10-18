@@ -1,0 +1,9 @@
+{
+    "#bold_label": {
+        "font": {
+            "name": "noto_sans",
+            "size": "14",
+            "bold": "1"
+        }
+    }
+}

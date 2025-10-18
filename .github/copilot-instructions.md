@@ -60,6 +60,7 @@ ASSETS/
 - **Screen drawing**: `screen_drawn` flag prevents redraw until state change
 - **Element lifecycle**: Always call `element.kill()` and remove from `active_ui_elements` when changing states
 - **Coordinate storage**: UI classes store both `original_x/y` (1920x1080) and scaled coordinates
+- **Text styling**: Panel text is automatically bold via `theme.json` and HTML `<b>` tags
 
 ### Event Handling
 - **Button identification**: Use `event.ui_element == button_reference` pattern
