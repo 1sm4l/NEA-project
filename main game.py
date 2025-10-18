@@ -1490,14 +1490,22 @@ def create_instruction_text(instruction_box):
     txt = (
     f"HOW TO PLAY: <br>"
     f"1. Create a deck using the deck builder. <br>"
-    f"2. Swap profile by pressing the 'P1' button to create player 2's deck. <br>"
+    f"2. Swap profiles with the 'P1' button to create player 2's deck. <br>"
     f"3. Play against a friend. <br>"
-    f"4. Aim of the game is to get your opponent's health down to 0. <br>"
-
+    f"4. The goal is to reduce your opponent's health to 0. <br>"
+    f"5. Each player starts with 100 health and 10 energy. <br>"
+    f"6. Each round, players gain 5 energy and draw 2 cards. <br>"
+    f"7. Players take turns playing cards until they run out of energy or end their turn. <br>"
+    f"8. Cards cost energy and deal damage or heal when played. <br><br>"
     f"CARDS: <br>"
-    f"Each card is part of a race. Cards in a race may contain synergies or tactical combos that can be used to have an edge over the opponent. <br>"
-    f"Each card contains a cost to play, damage and heal. <br>"
+    f"Cards belong to races and may have synergies or tactical combos for an advantage. <br>"
+    f"Each card shows its cost, damage, and healing effects. <br><br>"
+    f"PROFILE SELECTION: <br>"
+    f"Players can create and save two decks using the profile selection in the main menu or deck builder. <br>"
+    f"Switch profiles anytime with the 'P1' button. <br>"
+    f"Good luck and have fun playing Twine! <br>"
     )
+
 
 
     instruction_text_label = instruction_box.add_text_block(txt)
